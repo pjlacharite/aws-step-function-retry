@@ -39,10 +39,11 @@ def startExecutionAtFailedState(executionArn, newMachine):
     '''
     2- Trigger a new execution with a GoTo statement to the failed state with the failed input.
     '''
-    name = json.loads(failedSMInfo[1])["_id"]
+    split = executionArn.split(':')
+
+    name = split[len(split)-1]
     failedInput = json.loads(failedSMInfo[1])
     failedInput["goto"] = failedSMInfo[0]
-
     try:
         response = client.start_execution(
             stateMachineArn= args.stepFunctionArn + '-with-GoToState',
@@ -220,8 +221,8 @@ if __name__ == '__main__':
         extractedArns = extractArn(filteredExecutions)
         
         for extractedArn in extractedArns:
-            print("Retrying execution ARN: {}".format(extractArn))
+            print("Retrying execution ARN: {}".format(extractedArn))
             startExecutionAtFailedState(extractedArn, newMachine)
 
-        if "nextToken" in result and extractedArns:
+        if "nextToken" not in result or len(extractedArns) <= 0:
             break
